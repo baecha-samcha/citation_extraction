@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>APA 7th Citation Generator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>APA 7th Citation</h1>
+        <p id="pageType">Analyzing current page…</p>
+      </div>
+      <button id="reextract" class="secondary" type="button">Re-extract</button>
+    </header>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <form id="citationForm">
+      <label>Title
+        <textarea id="title" rows="2" autocomplete="off"></textarea>
+      </label>
+      <label>Author
+        <textarea id="author" rows="2" autocomplete="off"></textarea>
+        <span class="hint">Use semicolons for multiple authors.</span>
+      </label>
+      <div class="grid">
+        <label>Date
+          <input id="date" type="text" autocomplete="off">
+        </label>
+        <label>Website Name
+          <input id="websiteName" type="text" autocomplete="off">
+        </label>
+      </div>
+      <label>Publisher
+        <input id="publisher" type="text" autocomplete="off">
+      </label>
+      <label>URL
+        <textarea id="url" rows="2" autocomplete="off" spellcheck="false"></textarea>
+      </label>
+      <label class="checkbox">
+        <input id="includeRetrievalDate" type="checkbox">
+        Include retrieval date
+      </label>
+    </form>
+
+    <section class="preview-wrap" aria-labelledby="previewHeading">
+      <h2 id="previewHeading">APA Citation</h2>
+      <div id="preview" class="preview"></div>
+    </section>
+
+    <button id="copy" class="primary" type="button" disabled>Copy APA Citation</button>
+
+    <details>
+      <summary>Debug Details</summary>
+      <div id="debug" class="debug"></div>
+    </details>
+  </main>
+  <script src="citationFormatter.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "APA 7th 자동 인용 생성기",
+  "version": "1.0.0",
+  "description": "현재 웹페이지의 메타데이터와 DOM을 분석해 편집 가능한 APA 7th 인용을 생성합니다.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "APA 7th 인용 생성기"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["extractor.js", "contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
