@@ -4,9 +4,9 @@
 
 ## 설치
 
-1. Chrome에서 `chrome://extensions`를 엽니다.
-2. 오른쪽 위의 **Developer mode**를 켭니다.
-3. **Load unpacked**를 누릅니다.
+1. 이 레포를 zip 파일로 다운로드 합니다.
+2. Chrome에서 `chrome://extensions`를 엽니다.
+3. 오른쪽 위의 **Developer mode**를 켭니다.
 4. 이 프로젝트 폴더를 선택합니다.
 5. 일반 `http://` 또는 `https://` 웹페이지에서 확장프로그램 아이콘을 누릅니다.
 
