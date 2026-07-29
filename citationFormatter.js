@@ -71,6 +71,9 @@
     if (formatted.length === 0) return "";
     if (formatted.length === 1) return formatted[0];
     if (formatted.length === 2) return `${formatted[0]}, & ${formatted[1]}`;
+    if (formatted.length > 20) {
+      return `${formatted.slice(0, 19).join(", ")}, ... ${formatted[formatted.length - 1]}`;
+    }
     return `${formatted.slice(0, -1).join(", ")}, & ${formatted[formatted.length - 1]}`;
   }
 

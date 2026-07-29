@@ -22,7 +22,7 @@
 
 제목은 JSON-LD `headline`/`name`, `citation_title`, Open Graph, Twitter, Dublin Core, `article h1`, `main h1`, 기타 `h1`, 본문 안 `h2`, `document.title` 순으로 후보를 모읍니다. 문서 본문과의 위치, 길이, 일반적인 메뉴 문구 등을 반영해 점수화하고 사이트명 suffix를 정리합니다.
 
-저자는 JSON-LD `author.name`, `citation_author`, `author`, `article:author`, `rel=author`, byline/author 관련 class와 id, 화면의 `By …` 패턴 순으로 수집합니다. 찾지 못하면 website name을 기관 저자로 사용합니다.
+저자는 JSON-LD `author.name`, `citation_author`, `author`, `article:author`, `rel=author`, byline/author 관련 class와 id, 화면의 `By …` 패턴 순으로 수집한 뒤 사람 이름으로 보이는 후보만 사용합니다. 사람 이름으로 판별되는 후보가 없으면 저자 필드를 비워 둡니다.
 
 날짜는 JSON-LD `datePublished`, `article:published_time`, `citation_publication_date`, Dublin Core, `time[datetime]`, 날짜 관련 class/id, 본문 앞부분의 날짜 패턴 순으로 수집합니다. 확정 가능한 날짜가 없으면 `n.d.`를 사용합니다.
 

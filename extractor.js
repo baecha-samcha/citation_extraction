@@ -2,7 +2,10 @@
   "use strict";
 
   const BAD_TITLE = /^(home|login|log in|sign in|menu|search|search results?|untitled|homepage)$/i;
-  const ORG_WORDS = /\b(university|institute|institution|ministry|department|agency|association|organization|organisation|foundation|company|corporation|council|committee|government|office|bureau|news|press|team|staff|editorial)\b/i;
+  const ORG_WORDS = /\b(university|institute|institution|ministry|department|agency|association|organization|organisation|foundation|company|corporation|council|committee|government|office|bureau|news|press|team|staff|editorial|media|journal|magazine|newspaper|times|daily|tribune|herald|gazette|chronicle|network|reuters|associated\s+press|bbc|cnn)\b/i;
+  const NON_AUTHOR_WORDS = /\b(?:admin|administrator|editor|moderator|contributor|guest|anonymous|unknown|published|updated|posted|copyright|privacy|terms|login|subscribe|newsletter|read\s+more)\b/i;
+  const KOREAN_ORG_WORDS = /(?:뉴스|신문|일보|방송|미디어|통신|매거진|저널|대학교|대학|연구소|기관|정부|부처|위원회|협회|재단|회사|법인|팀|스태프|편집부|취재팀|운영진)/;
+  const KOREAN_NON_AUTHOR_WORDS = /(?:관리자|운영자|익명|알 수 없음|기자|에디터|편집자|작성자|저자|기고자|구독|로그인|개인정보|약관)/;
 
   function normalizeWhitespace(value) {
     return String(value || "").replace(/[\u00a0\u2000-\u200b\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim();
@@ -139,13 +142,15 @@
 
   function cleanAuthor(value) {
     return normalizeWhitespace(value)
-      .replace(/^(?:by|written\s+by|author(?:s)?\s*:|posted\s+by)\s+/i, "")
+      .replace(/^(?:by|written\s+by|posted\s+by)\s+/i, "")
+      .replace(/^(?:author(?:s)?|작성자|저자)(?:\s*[:：]\s*|\s+)/i, "")
+      .replace(/\s+(?:기자|에디터|편집자|작성자|저자)\s*$/i, "")
       .replace(/\s+(?:\||·)\s+.*$/, "")
       .replace(/\s*,?\s*(?:published|updated|posted)\b.*$/i, "")
       .trim();
   }
 
-  function splitAuthors(value) {
+  function splitAuthorPieces(value) {
     const cleaned = cleanAuthor(value);
     if (!cleaned) return [];
     let pieces;
@@ -153,6 +158,37 @@
     else if ((cleaned.match(/,/g) || []).length >= 2 && !ORG_WORDS.test(cleaned)) pieces = cleaned.split(/\s*,\s*/);
     else pieces = [cleaned];
     return pieces.map(cleanAuthor).filter((name) => name.length >= 2 && name.length <= 100);
+  }
+
+  function isLikelyPersonName(name) {
+    const value = cleanAuthor(name);
+    if (!value) return false;
+    if (ORG_WORDS.test(value) || NON_AUTHOR_WORDS.test(value)) return false;
+    if (KOREAN_ORG_WORDS.test(value) || KOREAN_NON_AUTHOR_WORDS.test(value)) return false;
+    if (/https?:|www\.|@|#|copyright|all rights reserved/i.test(value)) return false;
+    if (/\d/.test(value)) return false;
+    if (!/^[\p{L}\p{M}][\p{L}\p{M}\s.'’,-]*$/u.test(value)) return false;
+
+    const commaParts = value.split(/\s*,\s*/).filter(Boolean);
+    const normalized = commaParts.length === 2 ? `${commaParts[1]} ${commaParts[0]}` : value;
+    const parts = normalized
+      .split(/\s+/)
+      .map((part) => part.replace(/^[.'’,\-]+|[.'’,\-]+$/g, ""))
+      .filter(Boolean);
+    if (!parts.length || parts.length > 5) return false;
+    if (/^(?:the|a|an)$/i.test(parts[0])) return false;
+
+    const lettersOnly = normalized.replace(/[^\p{L}\p{M}]/gu, "");
+    if (/[\u3131-\uD79D]/.test(normalized)) {
+      return lettersOnly.length >= 2 && lettersOnly.length <= 12 && parts.length <= 3;
+    }
+
+    if (parts.length < 2) return false;
+    return parts.every((part) => /^[\p{L}\p{M}](?:[\p{L}\p{M}.'’-]*|\.)$/u.test(part) && part.length <= 30);
+  }
+
+  function splitAuthors(value) {
+    return splitAuthorPieces(value).filter(isLikelyPersonName);
   }
 
   function authorType(name) {
@@ -167,6 +203,7 @@
     if (text.length > 120 || text.split(/\s+/).length > 12) score -= 55;
     if (/\b\d{4}\b|\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b/i.test(text)) score -= 45;
     if (/^https?:|@|copyright|all rights reserved/i.test(text)) score -= 55;
+    if (!splitAuthorPieces(text).some(isLikelyPersonName)) score -= 130;
     return score;
   }
 
@@ -198,13 +235,11 @@
       delete candidate.baseScore;
     });
     candidates.sort((a, b) => b.score - a.score);
-    const best = candidates.find((candidate) => candidate.score > 20);
+    const best = candidates.find((candidate) => candidate.score > 20 && splitAuthors(candidate.value).length);
     const names = best ? splitAuthors(best.value) : [];
-    const organizationFallback = names.length ? "" : normalizeWhitespace(websiteName);
-    const finalNames = names.length ? names : organizationFallback ? [organizationFallback] : [];
     return {
-      value: finalNames.map((name) => ({ name, type: names.length ? authorType(name) : "organization" })),
-      source: best?.source || (organizationFallback ? "website name as organization author" : "no author found"),
+      value: names.map((name) => ({ name, type: authorType(name) })),
+      source: best?.source || "no person author found",
       candidates
     };
   }
@@ -326,6 +361,7 @@
     parseDate,
     scoreTitleCandidate,
     scoreAuthorCandidate,
+    isLikelyPersonName,
     getTextSafely,
     normalizeWhitespace
   };
